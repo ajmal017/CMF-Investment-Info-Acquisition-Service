@@ -84,6 +84,8 @@ def addStNdRdTh(numberString):
         numberString += "th"
     return numberString
 
+attributesTuple = ("Ticker", "Market Capitalization", "Trailing PE", "Forward PE", "PEG Ratio (5 yr expected)", "Price/Sales (ttm)", "Price/Book (mrq)", "Enterprise Value/Revenue", "Enterprise Value/EBITDA", "Profit Margin", "ROA (ttm)", "ROE (ttm)", "Quarterly Revenue Growth (yoy)", "EBITDA", "Quarterly Earnings Growth (yoy)")
+
 valueDictionary = {"Ticker": ticker}
 valueDictionary["Market Capitalization"] = getValueFor("Market Cap (intraday)", includesOneLetterAfter=True, hasSuperScript=True)
 valueDictionary["Trailing PE"] = getValueFor("Trailing P/E")
@@ -102,7 +104,9 @@ valueDictionary["Quarterly Earnings Growth (yoy)"] = getValueFor("Quarterly Earn
 
 if sustainability_name_box == None:
     valueDictionary["ESG Data"] = "Unavailable"
+    attributesTuple += ("ESG Data",)
 else:
+    attributesTuple += ("Total ESG Score", "Total ESG Percentile", "Environment Score", "Environment Percentile", "Social Score", "Social Percentile", "Governmental Score", "Governmental Percentile")
     data = sustainability_name_box.text.strip()
 
     index = 0
@@ -133,7 +137,8 @@ else:
 with open(cwd + "/" + ticker + ' Data.csv', 'wb') as csvfile:
     filewriter = csv.writer(csvfile, delimiter=',',
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
-    for key in valueDictionary:
+
+    for key in attributesTuple:
         filewriter.writerow([key, valueDictionary[key]])
 
 
