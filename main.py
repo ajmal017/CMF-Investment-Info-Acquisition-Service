@@ -20,119 +20,66 @@ while True:
     statisticssoup = BeautifulSoup(statisticsresponse.text, 'html.parser')
     sustainabilitysoup = BeautifulSoup(sustainabilityresponse.text, "html.parser")
 
-    statistcs_name_box = statisticssoup.find('section', attrs={'data-test': 'qsp-statistics'})
-    sustainability_name_box = sustainabilitysoup.find('section', attrs={'data-test': 'qsp-sustainability'})
+    usefulSustain = sustainabilitysoup.find("div", {"class": "smartphone_Mt(20px)", "data-reactid": "14"})
+    usefulStats = sustainabilitysoup.find('section', attrs={'data-test': 'qsp-sustainability'})
 
-    if statistcs_name_box == None:
+    statistcs_name_box = statisticssoup.find('section', attrs={'data-test': 'qsp-statistics'})
+    sustainability_name_box = sustainabilitysoup.find('section', {'data-test': 'qsp-sustainability'})
+
+    if statistcs_name_box == None or statisticsresponse.status_code != 200:
         print("We cannot search up the symbol you have entered. Please try a different one")
     else:
         break
 
 
+def findValueWithID(soup, type, id):
+    s = soup.find(type, {"data-reactid": str(id)})
+    print(s)
+    return s.getText()
 
-data = statistcs_name_box.text.strip()
+def findIDFromFinanceSoup(id):
+    return findValueWithID(statisticssoup, "td", id)
 
-index = 0
-
-def find_str(s, char):
-    global index
-
-    if char in s:
-        c = char[0]
-        for ch in s[index:]:
-            if ch == c:
-                if s[index:index+len(char)] == char:
-                    return index + len(char)
-
-            index += 1
-
-    return -1
+def findIDFromSustainabilitySoup(type, id):
+    return findValueWithID(usefulSustain, type, id)
 
 
-def getNumberAfterThisIndex(index, originalString, includesOneLetterAfter = False):
-    i = index
-    while i - index < 10:
-        if originalString[i].isalpha() and originalString[i] != "." and originalString[i] != " " or originalString[i] == "%":
-            if originalString[i:i+3] == 'N/A':
-                return 'N/A'
-            elif not includesOneLetterAfter:
-                break
-            else:
-                includesOneLetterAfter = False
-        i += 1
-
-    # print("Before data is " + data[:5])
-    return originalString[index:i].replace(" ", "")
-
-def getValueFor(key, includesOneLetterAfter = False, hasSuperScript = False):
-    # print(len(strm))
-    global index
-    index = find_str(data, key)
-    if hasSuperScript:
-        index += 2
-    return getNumberAfterThisIndex(index, data, includesOneLetterAfter=includesOneLetterAfter)
-
-
-def addStNdRdTh(numberString):
-    if numberString[-1] == "1":
-        numberString += "st"
-    elif numberString[-1] == "2":
-        numberString += "nd"
-    elif numberString[-1] == "3":
-        numberString += "rd"
-    else:
-        numberString += "th"
-    return numberString
-
+# s = sustainabilitysoup.find("div", {"class": "smartphone_Mt(20px)", "data-reactid": "14"})
+# l = s.find("div", {"data-reactid": 20})
 attributesTuple = ("Ticker", "Market Capitalization", "Trailing PE", "Forward PE", "PEG Ratio (5 yr expected)", "Price/Sales (ttm)", "Price/Book (mrq)", "Enterprise Value/Revenue", "Enterprise Value/EBITDA", "Profit Margin", "ROA (ttm)", "ROE (ttm)", "Quarterly Revenue Growth (yoy)", "EBITDA", "Quarterly Earnings Growth (yoy)")
 
 valueDictionary = {"Ticker": ticker}
-valueDictionary["Market Capitalization"] = getValueFor("Market Cap (intraday)", includesOneLetterAfter=True, hasSuperScript=True)
-valueDictionary["Trailing PE"] = getValueFor("Trailing P/E")
-valueDictionary["Forward PE"] = getValueFor("Forward P/E", hasSuperScript=True)
-valueDictionary["PEG Ratio (5 yr expected)"] = getValueFor("PEG Ratio (5 yr expected)", hasSuperScript=True)
-valueDictionary["Price/Sales (ttm)"] = getValueFor("Price/Sales (ttm)")
-valueDictionary["Price/Book (mrq)"] = getValueFor("Price/Book (mrq)")
-valueDictionary["Enterprise Value/Revenue"] = getValueFor("Enterprise Value/Revenue", hasSuperScript=True)
-valueDictionary["Enterprise Value/EBITDA"] = getValueFor("Enterprise Value/EBITDA", hasSuperScript=True)
-valueDictionary["Profit Margin"] = getValueFor("Profit Margin", includesOneLetterAfter=True)
-valueDictionary["ROA (ttm)"] = getValueFor("Return on Assets (ttm)", includesOneLetterAfter=True)
-valueDictionary["ROE (ttm)"] = getValueFor("Return on Equity (ttm)", includesOneLetterAfter=True)
-valueDictionary["Quarterly Revenue Growth (yoy)"] = getValueFor("Quarterly Revenue Growth (yoy)", includesOneLetterAfter=True)
-valueDictionary["EBITDA"] = getValueFor("EBITDA", includesOneLetterAfter=True)
-valueDictionary["Quarterly Earnings Growth (yoy)"] = getValueFor("Quarterly Earnings Growth (yoy)", includesOneLetterAfter=True)
+valueDictionary["Market Capitalization"] = findIDFromFinanceSoup(19)
+valueDictionary["Trailing PE"] = findIDFromFinanceSoup(33)
+valueDictionary["Forward PE"] = findIDFromFinanceSoup(40)
+valueDictionary["PEG Ratio (5 yr expected)"] = findIDFromFinanceSoup(47)
+valueDictionary["Price/Sales (ttm)"] = findIDFromFinanceSoup(54)
+valueDictionary["Price/Book (mrq)"] = findIDFromFinanceSoup(61)
+valueDictionary["Enterprise Value/Revenue"] = findIDFromFinanceSoup(68)
+valueDictionary["Enterprise Value/EBITDA"] = findIDFromFinanceSoup(75)
+valueDictionary["Profit Margin"] = findIDFromFinanceSoup(112)
+valueDictionary["ROA (ttm)"] = findIDFromFinanceSoup(131)
+valueDictionary["ROE (ttm)"] = findIDFromFinanceSoup(138)
+valueDictionary["Quarterly Revenue Growth (yoy)"] = findIDFromFinanceSoup(164)
+valueDictionary["EBITDA"] = findIDFromFinanceSoup(178)
+valueDictionary["Quarterly Earnings Growth (yoy)"] = findIDFromFinanceSoup(199)
 
-if sustainability_name_box == None:
+if sustainability_name_box == None or sustainabilityresponse.status_code != 200:
     valueDictionary["ESG Data"] = "Unavailable"
     attributesTuple += ("ESG Data",)
 else:
     attributesTuple += ("Total ESG Score", "Total ESG Percentile", "Environment Score", "Environment Percentile", "Social Score", "Social Percentile", "Governmental Score", "Governmental Percentile")
-    data = sustainability_name_box.text.strip()
+    valueDictionary["Total ESG Score"] = findIDFromSustainabilitySoup("div", 20)
+    valueDictionary["Total ESG Percentile"] = findIDFromSustainabilitySoup("span", 23)
 
-    index = 0
-    TotalScore = getValueFor("Total ESG score")[:2]
-    valueDictionary["Total ESG Score"] = TotalScore
-    index = 0
-    TotalPercentile = addStNdRdTh(getValueFor("Total ESG score" + TotalScore)) + " percentile"
-    valueDictionary["Total ESG Percentile"] = TotalPercentile
+    valueDictionary["Environment Score"] = findIDFromSustainabilitySoup("div", 35)
+    valueDictionary["Environment Percentile"] = findIDFromSustainabilitySoup("span", 38)
 
-    EnvScore = getValueFor("Environment")[:2]
-    index = 0
-    valueDictionary["Environment Score"] = EnvScore
-    EnvPercentile = addStNdRdTh(getValueFor("Environment" + EnvScore)) + " percentile"
-    valueDictionary["Environment Percentile"] = EnvPercentile
+    valueDictionary["Social Score"] = findIDFromSustainabilitySoup("div", 45)
+    valueDictionary["Social Percentile"] = findIDFromSustainabilitySoup("span", 48)
 
-    SocialScore = getValueFor("percentileSocial")[:2]
-    index = 0
-    valueDictionary["Social Score"] = SocialScore
-    SocialPercentile = addStNdRdTh(getValueFor("percentileSocial" + SocialScore)) + " percentile"
-    valueDictionary["Social Percentile"] = SocialPercentile
-
-    GovScore = getValueFor("percentileGovernance")[:2]
-    index = 0
-    valueDictionary["Governmental Score"] = GovScore
-    GovPercentile = addStNdRdTh(getValueFor("percentileGovernance" + GovScore)) + " percentile"
-    valueDictionary["Governmental Percentile"] = GovPercentile
+    valueDictionary["Governmental Score"] = findIDFromSustainabilitySoup("div", 55)
+    valueDictionary["Governmental Percentile"] = findIDFromSustainabilitySoup("span", 58)
 
 with open(cwd + "/" + ticker + ' Data.csv', 'wb') as csvfile:
     filewriter = csv.writer(csvfile, delimiter=',',
