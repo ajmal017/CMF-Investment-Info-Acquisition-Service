@@ -10,7 +10,7 @@ cwd = os.path.dirname(os.path.realpath(__file__))
 while True:
     ticker = raw_input("Please enter the ticker name: ")
     print("Acquring data... This may take up to 20 seconds")
-
+    ticker = ticker.replace(".", "-")
     statisticsurl = 'https://finance.yahoo.com/quote/' + ticker + '/key-statistics?p=' + ticker
     sustainabilityurl = 'https://finance.yahoo.com/quote/' + ticker + '/sustainability?p=' + ticker
 
