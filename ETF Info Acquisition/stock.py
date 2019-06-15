@@ -41,19 +41,32 @@ def returnStockInfo(ticker, weight):
 
     def findValueWithID(soup, type, id):
         s = soup.find(type, {"data-reactid": str(id)})
-        return s.getText().replace("\n", "").replace("\t", "").strip()
+        if s != None:
+            return s.getText().replace("\n", "").replace("\t", "").strip()
+        else:
+            return "N/A"
 
-    def findIDFromFinanceSoup(id):
-        return findValueWithID(etfdbsoup, "td", id)
+    def findIDFromFinanceSoup(id, altid=-1):
+        if altid == -1:
+            return findValueWithID(etfdbsoup, "td", id)
+        else:
+            value = findValueWithID(etfdbsoup, "td", id)
+            if value == 'N/A':
+                return findValueWithID(etfdbsoup, "td", altid)
+            else:
+                return value
 
     def findIDFromSustainabilitySoup(type, id):
         return findValueWithID(usefulSustain, type, id)
 
     def findIDFromIndustryAndSectorSoup():
         s = industryAndSectorSoup.find("p", {"data-reactid": "18"})
-        sector = s.find("span", {"data-reactid": "21"}).getText().replace("\n", "").replace("\t", "").replace("&amp;", "&").strip()
-        industry = s.find("span", {"data-reactid": "25"}).getText().replace("\n", "").replace("\t", "").replace("&amp;", "&").strip()
-        return (sector, industry)
+        try:
+            sector = s.find("span", {"data-reactid": "21"}).getText().replace("\n", "").replace("\t", "").replace("&amp;", "&").strip()
+            industry = s.find("span", {"data-reactid": "25"}).getText().replace("\n", "").replace("\t", "").replace("&amp;", "&").strip()
+            return (sector, industry)
+        except:
+            return ("N/A", "N/A")
 
     # s = sustainabilitysoup.find("div", {"class": "smartphone_Mt(20px)", "data-reactid": "14"})
     # l = s.find("div", {"data-reactid": 20})
@@ -69,15 +82,19 @@ def returnStockInfo(ticker, weight):
     valueDictionary["PEG Ratio (5 yr expected)"] = findIDFromFinanceSoup(47)
     valueDictionary["Price/Sales (ttm)"] = findIDFromFinanceSoup(54)
     valueDictionary["Price/Book (mrq)"] = findIDFromFinanceSoup(61)
-    valueDictionary["Enterprise Value/Revenue"] = findIDFromFinanceSoup(68)
-    valueDictionary["Enterprise Value/EBITDA"] = findIDFromFinanceSoup(75)
-    valueDictionary["Profit Margin"] = findIDFromFinanceSoup(112)
-    valueDictionary["ROA (ttm)"] = findIDFromFinanceSoup(131)
-    valueDictionary["ROE (ttm)"] = findIDFromFinanceSoup(138)
-    valueDictionary["Quarterly Revenue Growth (yoy)"] = findIDFromFinanceSoup(164)
+    valueDictionary["Enterprise Value/Revenue"] = findIDFromFinanceSoup(68, altid=69)
+    valueDictionary["Enterprise Value/EBITDA"] = findIDFromFinanceSoup(75, altid=76)
+    valueDictionary["Profit Margin"] = findIDFromFinanceSoup(112, altid=113)
 
-    valueDictionary["EBITDA"] = findIDFromFinanceSoup(178)
-    valueDictionary["Quarterly Earnings Growth (yoy)"] = findIDFromFinanceSoup(199)
+    valueDictionary["ROA (ttm)"] = findIDFromFinanceSoup(131,altid=132)
+    valueDictionary["ROE (ttm)"] = findIDFromFinanceSoup(138)
+
+    valueDictionary["Quarterly Revenue Growth (yoy)"] = findIDFromFinanceSoup(164, altid=166)
+
+
+    valueDictionary["EBITDA"] = findIDFromFinanceSoup(178, altid=173)
+
+    valueDictionary["Quarterly Earnings Growth (yoy)"] = findIDFromFinanceSoup(199, altid=201)
 
     if sustainability_name_box == None or sustainabilityresponse.status_code != 200:
         valueDictionary["ESG Data"] = "Unavailable"

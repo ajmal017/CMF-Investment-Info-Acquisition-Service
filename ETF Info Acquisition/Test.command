@@ -145,8 +145,15 @@ comparisonsWithPeer = esgSection.find_all("span", {"class", "relative-metric-ran
 dataPoints = esgSection.find_all("span", {"class": "relative-metric-bubble-data"})
 for index, item in enumerate(names):
     valueDict = dict()
-    valueDict["Peer Ranking"] = comparisonsWithPeer[index].find("a").getText().replace("\n", "").replace("\t", "").strip()
-    valueDict["Value"] = dataPoints[index].getText().replace("\n", "").replace("\t", "").strip()
+    try:
+        valueDict["Peer Ranking"] = comparisonsWithPeer[index].find("a").getText().replace("\n", "").replace("\t", "").strip()
+    except:
+        valueDict["Peer Ranking"] = "N/A"
+
+    try:
+        valueDict["Value"] = dataPoints[index].getText().replace("\n", "").replace("\t", "").strip()
+    except:
+        valueDict["Value"] = "N/A"
     performanceInfo[item.getText().replace("\n", "").replace("\t", "").strip()] = valueDict
 
 
