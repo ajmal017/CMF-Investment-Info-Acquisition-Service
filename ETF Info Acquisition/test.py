@@ -7,7 +7,7 @@ import csv
 import os
 cwd = os.path.dirname(os.path.realpath(__file__))
 
- def returnStockInfo(ticker, weight):
+def returnStockInfo(ticker, weight):
     ticker = ticker.replace(".", "-")
     industryAndSectorUrl = 'https://finance.yahoo.com/quote/' + ticker + '/profile?'
     statisticsurl = 'https://finance.yahoo.com/quote/' + ticker + '/key-statistics?p=' + ticker
