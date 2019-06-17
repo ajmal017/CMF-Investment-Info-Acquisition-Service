@@ -202,21 +202,29 @@ nameOfETF = etfdbsoup.find("h1", {"class": "data-title"}).find_all("span")[1].ge
 # =============== TOP HOLDINGS ==============
 holdingsData = []
 
-
+n = 4
 def acquireDataForHolding(index, ticker, holdingsArray):
-
+    global n
     nameAndTicker = ticker.getText().replace("\n", "").replace("\t", "").strip()
     print("Getting data for " + nameAndTicker)
     if "(" not in nameAndTicker:
-        dataAbtThatStock = {"Ticker": nameAndTicker, "Status": "Data Unavailable. Please manually acquire it."}
+        print(f"For {nameAndTicker}, the data is unavailable. Please manually acquire it")
+        # dataAbtThatStock = {"Ticker": nameAndTicker, "Status": "Data Unavailable. Please manually acquire it."}
+        n += 1
     else:
         tickerAlone = nameAndTicker[nameAndTicker.find("(")+1:nameAndTicker.find(")")]
-        dataAbtThatStock = returnStockInfo(tickerAlone, topHoldingsWeight[index].getText().replace("\n", "").replace("\t", "").strip())
+        if tickerAlone.isalpha():
+            dataAbtThatStock = returnStockInfo(tickerAlone, topHoldingsWeight[index].getText().replace("\n", "").replace("\t", "").strip())
 
-        if type(dataAbtThatStock) is not dict:
-            dataAbtThatStock = {"Ticker": nameAndTicker, "Status": "Data Unavailable. Please manually acquire it."}
+            if type(dataAbtThatStock) is not dict:
+                dataAbtThatStock = {"Ticker": nameAndTicker, "Status": "Data Unavailable. Please manually acquire it."}
 
-    holdingsArray.append(dataAbtThatStock)
+            holdingsArray.append(dataAbtThatStock)
+
+        else:
+            print(f"For {nameAndTicker}, the data is unavailable. Please manually acquire it")
+
+
     print("Finished getting data for " + nameAndTicker)
 
 
@@ -224,8 +232,9 @@ print("Acquiring Data For Top 5 Holdings")
 topHoldingsTicker = etfdbsoup.find_all("td", {"data-th":"Holding"})
 topHoldingsWeight = etfdbsoup.find_all("td", {"data-th":"Weighting"})
 procs = []
+
 for index, ticker in enumerate(topHoldingsTicker):
-    if index > 4:
+    if index > n:
         break
 
     proc = Process(target=acquireDataForHolding(index,ticker,holdingsData, ))
@@ -453,7 +462,7 @@ def addTable(data, titleFormat=TableTitleStyle.TOP):
     nOfRows = len(data)
     nOfCols = len(data[0])
     table = document.add_table(rows=nOfRows, cols=nOfCols)
-    table.style = 'TableGrid'
+    table.style = 'Table Grid'
 
     for indexr, eachRow in enumerate(table.rows):
         for indexc, cell in enumerate(eachRow.cells):

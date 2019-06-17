@@ -8,7 +8,7 @@ import os
 cwd = os.path.dirname(os.path.realpath(__file__))
 
 while True:
-    ticker = raw_input("Please enter the ticker name: ")
+    ticker = input("Please enter the ticker name: ")
     print("Acquring data... This may take up to 20 seconds")
     ticker = ticker.replace(".", "-")
     industryAndSectorUrl = 'https://finance.yahoo.com/quote/' + ticker + '/profile?'
@@ -127,7 +127,7 @@ else:
     valueDictionary["Net Margin (Quarter) For " + quarter] = netProfitMarginSoup.find("td", {
         "class": "debeligrub2 s"}).find("span").getText()
 
-with open(cwd + "/" + ticker + ' Data.csv', 'wb') as csvfile:
+with open(cwd + "/" + ticker + ' Data.csv', 'w') as csvfile:
     filewriter = csv.writer(csvfile, delimiter=',',
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
     allKeys = list(valueDictionary)

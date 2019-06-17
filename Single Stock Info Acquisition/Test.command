@@ -8,132 +8,130 @@ import os
 cwd = os.path.dirname(os.path.realpath(__file__))
 
 while True:
-    ticker = raw_input("Please enter the ticker name: ")
+    ticker = input("Please enter the ticker name: ")
     print("Acquring data... This may take up to 20 seconds")
-
+    ticker = ticker.replace(".", "-")
+    industryAndSectorUrl = 'https://finance.yahoo.com/quote/' + ticker + '/profile?'
     statisticsurl = 'https://finance.yahoo.com/quote/' + ticker + '/key-statistics?p=' + ticker
     sustainabilityurl = 'https://finance.yahoo.com/quote/' + ticker + '/sustainability?p=' + ticker
+    EBITAMarginURL = "https://csimarket.com/stocks/singleProfitabilityRatios.php?code=" + ticker + "&ebit"
+    grossProfitMarginURL = "https://ycharts.com/companies/" + ticker + "/gross_profit_margin"
+    netProfitMarginURL = "https://csimarket.com/stocks/singleProfitabilityRatios.php?code=" + ticker + "&net"
 
+    industryAndSectorResponse = requests.get(industryAndSectorUrl)
     statisticsresponse = requests.get(statisticsurl)
     sustainabilityresponse = requests.get(sustainabilityurl)
+    EBITAMarginURLResponse = requests.get(EBITAMarginURL)
+    grossProfitMarginResponse = requests.get(grossProfitMarginURL)
+    netProfitMarginResponse = requests.get(netProfitMarginURL)
 
-    statisticssoup = BeautifulSoup(statisticsresponse.text, 'html.parser')
+    industryAndSectorSoup = BeautifulSoup(industryAndSectorResponse.text, "html.parser")
+    etfdbsoup = BeautifulSoup(statisticsresponse.text, 'html.parser')
     sustainabilitysoup = BeautifulSoup(sustainabilityresponse.text, "html.parser")
+    EBITAMarginSoup = BeautifulSoup(EBITAMarginURLResponse.text, "html.parser")
+    grossProfitMarginSoup = BeautifulSoup(grossProfitMarginResponse.text, "html.parser")
+    netProfitMarginSoup = BeautifulSoup(netProfitMarginResponse.text, "html.parser")
 
-    statistcs_name_box = statisticssoup.find('section', attrs={'data-test': 'qsp-statistics'})
-    sustainability_name_box = sustainabilitysoup.find('section', attrs={'data-test': 'qsp-sustainability'})
+    usefulSustain = sustainabilitysoup.find("div", {"class": "smartphone_Mt(20px)", "data-reactid": "14"})
+    usefulStats = sustainabilitysoup.find('section', attrs={'data-test': 'qsp-sustainability'})
 
-    if statistcs_name_box == None:
+    statistcs_name_box = etfdbsoup.find('section', attrs={'data-test': 'qsp-statistics'})
+    sustainability_name_box = sustainabilitysoup.find('section', {'data-test': 'qsp-sustainability'})
+
+    if statistcs_name_box == None or statisticsresponse.status_code != 200:
         print("We cannot search up the symbol you have entered. Please try a different one")
     else:
         break
 
 
+def findValueWithID(soup, type, id):
+    s = soup.find(type, {"data-reactid": str(id)})
+    return s.getText().replace("\n", "").replace("\t", "").strip()
 
-data = statistcs_name_box.text.strip()
+def findIDFromFinanceSoup(id):
+    return findValueWithID(etfdbsoup, "td", id)
 
-index = 0
+def findIDFromSustainabilitySoup(type, id):
+    return findValueWithID(usefulSustain, type, id)
 
-def find_str(s, char):
-    global index
+def findIDFromIndustryAndSectorSoup():
+    s = industryAndSectorSoup.find("p", {"data-reactid": "18"})
+    sector = s.find("span", {"data-reactid": "21"}).getText().replace("\n", "").replace("\t", "").replace("&amp;", "&").strip()
+    industry = s.find("span", {"data-reactid": "25"}).getText().replace("\n", "").replace("\t", "").replace("&amp;", "&").strip()
+    return (sector, industry)
 
-    if char in s:
-        c = char[0]
-        for ch in s[index:]:
-            if ch == c:
-                if s[index:index+len(char)] == char:
-                    return index + len(char)
-
-            index += 1
-
-    return -1
-
-
-def getNumberAfterThisIndex(index, originalString, includesOneLetterAfter = False):
-    i = index
-    while i - index < 10:
-        if originalString[i].isalpha() and originalString[i] != "." and originalString[i] != " " or originalString[i] == "%":
-            if originalString[i:i+3] == 'N/A':
-                return 'N/A'
-            elif not includesOneLetterAfter:
-                break
-            else:
-                includesOneLetterAfter = False
-        i += 1
-
-    # print("Before data is " + data[:5])
-    return originalString[index:i].replace(" ", "")
-
-def getValueFor(key, includesOneLetterAfter = False, hasSuperScript = False):
-    # print(len(strm))
-    global index
-    index = find_str(data, key)
-    if hasSuperScript:
-        index += 2
-    return getNumberAfterThisIndex(index, data, includesOneLetterAfter=includesOneLetterAfter)
-
-
-def addStNdRdTh(numberString):
-    if numberString[-1] == "1":
-        numberString += "st"
-    elif numberString[-1] == "2":
-        numberString += "nd"
-    elif numberString[-1] == "3":
-        numberString += "rd"
-    else:
-        numberString += "th"
-    return numberString
+# s = sustainabilitysoup.find("div", {"class": "smartphone_Mt(20px)", "data-reactid": "14"})
+# l = s.find("div", {"data-reactid": 20})
+attributesTuple = (
+"Ticker", "Market Capitalization", "Trailing PE", "Forward PE", "PEG Ratio (5 yr expected)", "Price/Sales (ttm)",
+"Price/Book (mrq)", "Enterprise Value/Revenue", "Enterprise Value/EBITDA", "Profit Margin", "ROA (ttm)",
+"ROE (ttm)", "Quarterly Revenue Growth (yoy)", "EBITDA", "Quarterly Earnings Growth (yoy)")
 
 valueDictionary = {"Ticker": ticker}
-valueDictionary["Market Capitalization"] = getValueFor("Market Cap (intraday)", includesOneLetterAfter=True, hasSuperScript=True)
-valueDictionary["Trailing PE"] = getValueFor("Trailing P/E")
-valueDictionary["Forward PE"] = getValueFor("Forward P/E", hasSuperScript=True)
-valueDictionary["PEG Ratio (5 yr expected)"] = getValueFor("PEG Ratio (5 yr expected)", hasSuperScript=True)
-valueDictionary["Price/Sales (ttm)"] = getValueFor("Price/Sales (ttm)")
-valueDictionary["Price/Book (mrq)"] = getValueFor("Price/Book (mrq)")
-valueDictionary["Enterprise Value/Revenue"] = getValueFor("Enterprise Value/Revenue", hasSuperScript=True)
-valueDictionary["Enterprise Value/EBITDA"] = getValueFor("Enterprise Value/EBITDA", hasSuperScript=True)
-valueDictionary["Profit Margin"] = getValueFor("Profit Margin", includesOneLetterAfter=True)
-valueDictionary["ROA (ttm)"] = getValueFor("Return on Assets (ttm)", includesOneLetterAfter=True)
-valueDictionary["ROE (ttm)"] = getValueFor("Return on Equity (ttm)", includesOneLetterAfter=True)
-valueDictionary["Quarterly Revenue Growth (yoy)"] = getValueFor("Quarterly Revenue Growth (yoy)", includesOneLetterAfter=True)
-valueDictionary["EBITDA"] = getValueFor("EBITDA", includesOneLetterAfter=True)
-valueDictionary["Quarterly Earnings Growth (yoy)"] = getValueFor("Quarterly Earnings Growth (yoy)", includesOneLetterAfter=True)
+valueDictionary["Market Capitalization"] = findIDFromFinanceSoup(19)
+valueDictionary["Trailing PE"] = findIDFromFinanceSoup(33)
+valueDictionary["Forward PE"] = findIDFromFinanceSoup(40)
+valueDictionary["PEG Ratio (5 yr expected)"] = findIDFromFinanceSoup(47)
+valueDictionary["Price/Sales (ttm)"] = findIDFromFinanceSoup(54)
+valueDictionary["Price/Book (mrq)"] = findIDFromFinanceSoup(61)
+valueDictionary["Enterprise Value/Revenue"] = findIDFromFinanceSoup(68)
+valueDictionary["Enterprise Value/EBITDA"] = findIDFromFinanceSoup(75)
+valueDictionary["Profit Margin"] = findIDFromFinanceSoup(112)
+valueDictionary["ROA (ttm)"] = findIDFromFinanceSoup(131)
+valueDictionary["ROE (ttm)"] = findIDFromFinanceSoup(138)
+valueDictionary["Quarterly Revenue Growth (yoy)"] = findIDFromFinanceSoup(164)
 
-if sustainability_name_box == None:
+valueDictionary["EBITDA"] = findIDFromFinanceSoup(178)
+valueDictionary["Quarterly Earnings Growth (yoy)"] = findIDFromFinanceSoup(199)
+
+if sustainability_name_box == None or sustainabilityresponse.status_code != 200:
     valueDictionary["ESG Data"] = "Unavailable"
 else:
-    data = sustainability_name_box.text.strip()
+    valueDictionary["Total ESG Score"] = findIDFromSustainabilitySoup("div", 20)
+    valueDictionary["Total ESG Percentile"] = findIDFromSustainabilitySoup("span", 23)
 
-    index = 0
-    TotalScore = getValueFor("Total ESG score")[:2]
-    valueDictionary["Total ESG Score"] = TotalScore
-    index = 0
-    TotalPercentile = addStNdRdTh(getValueFor("Total ESG score" + TotalScore)) + " percentile"
-    valueDictionary["Total ESG Percentile"] = TotalPercentile
+    valueDictionary["Environment Score"] = findIDFromSustainabilitySoup("div", 35)
+    valueDictionary["Environment Percentile"] = findIDFromSustainabilitySoup("span", 38)
 
-    EnvScore = getValueFor("Environment")[:2]
-    index = 0
-    valueDictionary["Environment Score"] = EnvScore
-    EnvPercentile = addStNdRdTh(getValueFor("Environment" + EnvScore)) + " percentile"
-    valueDictionary["Environment Percentile"] = EnvPercentile
+    valueDictionary["Social Score"] = findIDFromSustainabilitySoup("div", 45)
+    valueDictionary["Social Percentile"] = findIDFromSustainabilitySoup("span", 48)
 
-    SocialScore = getValueFor("percentileSocial")[:2]
-    index = 0
-    valueDictionary["Social Score"] = SocialScore
-    SocialPercentile = addStNdRdTh(getValueFor("percentileSocial" + SocialScore)) + " percentile"
-    valueDictionary["Social Percentile"] = SocialPercentile
+    valueDictionary["Governmental Score"] = findIDFromSustainabilitySoup("div", 55)
+    valueDictionary["Governmental Percentile"] = findIDFromSustainabilitySoup("span", 58)
 
-    GovScore = getValueFor("percentileGovernance")[:2]
-    index = 0
-    valueDictionary["Governmental Score"] = GovScore
-    GovPercentile = addStNdRdTh(getValueFor("percentileGovernance" + GovScore)) + " percentile"
-    valueDictionary["Governmental Percentile"] = GovPercentile
+if industryAndSectorResponse.status_code != 200:
+    valueDictionary["Industry"] = "Unavailable"
+    valueDictionary["Sector"] = "Unavailable"
+else:
+    si = findIDFromIndustryAndSectorSoup()
+    valueDictionary["Sector"] = si[0]
+    valueDictionary["Industry"] = si[1]
 
-with open(cwd + "/" + ticker + ' Data.csv', 'wb') as csvfile:
+if EBITAMarginURLResponse.status_code != 200:
+    valueDictionary["EBITDA Margin"] = "Unavailable"
+else:
+    quarter = EBITAMarginSoup.find("td", {"class": "s9 zagqs sve_jedan_red dorubb"}).getText()
+    quarter = quarter[quarter.find("(")+1:quarter.find(")")]
+    valueDictionary["EBITDA Margin (Quarter) For " + quarter] = EBITAMarginSoup.find("td", {"class": "debeligrub2 s"}).find("span").getText()
+
+if grossProfitMarginResponse.status_code != 200:
+    valueDictionary["Gross Profit Margin"] = "Unavailable"
+else:
+    valueDictionary["Gross Profit Margin"] = grossProfitMarginSoup.find("span", {"id": "pgNameVal"}).getText()
+
+if netProfitMarginResponse.status_code != 200:
+    valueDictionary["Net Profit Margin"] = "Unavailable"
+else:
+    quarter = netProfitMarginSoup.find("td", {"class": "s9 zagqs sve_jedan_red dorubb"}).getText()
+    quarter = quarter[quarter.find("(") + 1:quarter.find(")")]
+    valueDictionary["Net Margin (Quarter) For " + quarter] = netProfitMarginSoup.find("td", {
+        "class": "debeligrub2 s"}).find("span").getText()
+
+with open(cwd + "/" + ticker + ' Data.csv', 'w') as csvfile:
     filewriter = csv.writer(csvfile, delimiter=',',
                             quotechar='|', quoting=csv.QUOTE_MINIMAL)
-    for key in valueDictionary:
+    allKeys = list(valueDictionary)
+    for key in allKeys:
         filewriter.writerow([key, valueDictionary[key]])
 
 

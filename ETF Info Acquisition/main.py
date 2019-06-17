@@ -67,11 +67,15 @@ def acquireDataForHolding(index, ticker, holdingsArray):
 
     nameAndTicker = ticker.getText().replace("\n", "").replace("\t", "").strip()
     print("Getting data for " + nameAndTicker)
-    tickerAlone = nameAndTicker[nameAndTicker.find("(")+1:nameAndTicker.find(")")]
-    dataAbtThatStock = returnStockInfo(tickerAlone, topHoldingsWeight[index].getText().replace("\n", "").replace("\t", "").strip())
+    if "(" not in nameAndTicker:
+        dataAbtThatStock = {"Ticker": nameAndTicker, "Status": "Data Unavailable. Please manually acquire it."}
+    else:
+        tickerAlone = nameAndTicker[nameAndTicker.find("(")+1:nameAndTicker.find(")")]
+        dataAbtThatStock = returnStockInfo(tickerAlone, topHoldingsWeight[index].getText().replace("\n", "").replace("\t", "").strip())
 
-    if type(dataAbtThatStock) is not dict:
-        dataAbtThatStock = {"Status": "Data Unavailable. Please manually acquire it."}
+        if type(dataAbtThatStock) is not dict:
+            dataAbtThatStock = {"Ticker": nameAndTicker, "Status": "Data Unavailable. Please manually acquire it."}
+
     holdingsArray.append(dataAbtThatStock)
     print("Finished getting data for " + nameAndTicker)
 
@@ -309,7 +313,7 @@ def addTable(data, titleFormat=TableTitleStyle.TOP):
     nOfRows = len(data)
     nOfCols = len(data[0])
     table = document.add_table(rows=nOfRows, cols=nOfCols)
-    table.style = 'TableGrid'
+    table.style = 'Table Grid'
 
     for indexr, eachRow in enumerate(table.rows):
         for indexc, cell in enumerate(eachRow.cells):
@@ -518,8 +522,12 @@ titles = list(holdingsData[0])
 ultimateArray = [titles]
 for eachCompany in holdingsData:
     companyInfo = []
-    for eachTitle in titles:
-        companyInfo.append(eachCompany[eachTitle])
+    if "Status" in list(eachCompany):
+        for eachTitle in titles:
+            companyInfo.append("")
+    else:
+        for eachTitle in titles:
+            companyInfo.append(eachCompany[eachTitle])
 
     ultimateArray.append(companyInfo)
 
