@@ -13,9 +13,9 @@ import eventlet
 eventlet.monkey_patch()
 from random import seed
 from random import randint
-from scraps import findProxies
 seed(1)
-
+maxToleranceForProxy = 20
+start = time.time()
 listOfUnsearchableTickers = []
 researchedETFs = {
     'Ticker': [],
@@ -29,7 +29,102 @@ researchedETFs = {
     'Score': []
 }
 
-proxiesDatabase = ['-1', '-1', '46.101.16.157:3128', '103.206.246.178:8080', '195.211.101.163:443', '91.192.4.26:8080', '93.152.176.222:50470', '103.84.36.130:8080', '170.210.236.1:38828', '195.69.221.198:38701', '103.73.224.5:37854', '103.84.36.130:8080', '43.252.73.98:53557', '89.109.14.179:48045', '217.12.222.210:53281', '116.212.150.7:38132', '36.67.27.189:59513', '195.191.183.169:47238', '188.187.200.36:38778', '46.101.16.157:3128', '103.206.246.178:8080', '195.211.101.163:443', '91.192.4.26:8080', '93.152.176.222:50470', '103.84.36.130:8080', '170.210.236.1:38828', '195.69.221.198:38701', '103.73.224.5:37854', '103.84.36.130:8080', '43.252.73.98:53557', '89.109.14.179:48045', '217.12.222.210:53281', '116.212.150.7:38132', '36.67.27.189:59513', '195.191.183.169:47238', '188.187.200.36:38778', '46.101.16.157:3128', '103.206.246.178:8080', '89.109.14.179:48045', '46.101.16.157:3128', '103.206.246.178:8080', '195.211.101.163:443', '91.192.4.26:8080', '93.152.176.222:50470', '103.84.36.130:8080', '170.210.236.1:38828', '195.69.221.198:38701', '103.73.224.5:37854', '103.84.36.130:8080', '43.252.73.98:53557', '89.109.14.179:48045', '217.12.222.210:53281', '116.212.150.7:38132', '36.67.27.189:59513', '195.191.183.169:47238', '188.187.200.36:38778', '46.101.16.157:3128', '103.206.246.178:8080', '89.109.14.179:48045', '-1', '-1', '-1', '-1', '-1', '-1', '-1', '-1', '-1']
+
+ip = "-1"
+proxiesDatabase = ['-1', '165.22.57.60:8888', '46.101.16.157:3128', '165.22.57.60:8888', '165.22.57.60:8888', '-2', '103.206.246.178:8080', '125.26.109.114:61005', '103.73.224.5:37854', '142.93.92.215:3128', '-3', '46.101.21.11:3128', '165.227.33.185:3128', '134.209.21.13:3128', '217.12.222.210:53281', '-4', '1.20.100.93:34926', '77.77.17.48:58528', '79.106.224.231:51254', '134.209.21.13:3128', '-5', '165.22.57.60:8888', '89.109.14.179:48045', '165.22.57.60:8888', '165.22.57.60:8888', '-6', '46.101.16.157:3128', '103.206.246.178:8080', '91.192.4.26:8080', '142.93.92.215:3128', '202.84.77.78:60322', '-7', '165.227.33.185:3128', '217.12.222.210:53281', '103.17.37.85:8080', '182.52.74.76:34084', '-8', '43.252.73.98:53557', '182.52.74.76:34084', '46.254.217.54:53281']
+
+
+proxiesDatabase += ['91.192.4.26:8080',
+           '1.20.100.93:34926',
+           '176.241.94.210:33391',
+           '103.84.36.130:8080', # bangladesh
+           '46.101.21.11:3128', # UK
+           '134.209.190.141:3128',
+            '-1',
+           '103.206.246.178:8080', # Indonesia
+           '142.93.92.215:3128',
+           '134.209.21.13:3128', # UK
+           '165.22.57.60:8888', #CA
+           '103.17.37.85:8080',
+           "79.106.224.231:51254",
+            '-1',
+           "170.210.236.1:38828",
+           "103.17.37.85:8080",
+           "144.48.109.161:8080",
+           "103.84.36.130:8080",
+           "103.204.82.13:60830",
+           "103.239.254.70:61967",
+           "103.73.224.5:37854",
+           '-1',
+            "181.188.187.141:39755",
+           "177.23.104.38:60359",
+           "177.91.127.32:60523",
+           "187.111.90.89:53281",
+           "45.4.183.88:53281",
+           "187.111.192.146:42592",
+           '-1',
+            "186.227.67.143:42813",
+           "143.107.44.122:80",
+           "93.152.176.222:50470",
+           "77.77.17.48:58528",
+           "116.212.152.192:39377",
+           '-1',
+            "103.216.48.81:8080",
+           "202.84.77.78:60322",
+           "116.212.150.7:38132",
+           "142.93.148.232:3128",
+           "165.227.33.185:3128",
+           "200.35.56.89:33310",
+           "46.183.56.107:49725",
+           "217.30.73.152:38039",
+           '-1',
+            "95.47.116.128:54904",
+           "103.53.110.55:44164",
+           "45.116.114.30:31658",
+           "123.63.54.229:55207",
+           "36.66.43.27:8080",
+           "36.67.27.189:59513",
+           "202.159.118.210:53873",
+           '-1',
+            "36.90.150.85:8080",
+           "101.255.124.5:47105",
+           "202.162.222.154:60990",
+           "43.252.73.98:53557",
+           "187.155.246.224:3128",
+           "103.235.199.93:47374",
+           "110.34.39.58:8080",
+           '-1',
+            "85.28.142.142:41950",
+           "188.187.200.36:38778",
+           "195.211.101.163:443",
+           "46.254.217.54:53281",
+           "195.191.183.169:47238",
+           "89.109.14.179:48045",
+           "62.76.5.157:30683",
+           '-1',
+            "194.114.129.131:60614",
+           "95.181.37.114:43384",
+           "91.219.25.173:44899",
+           "68.183.236.254:3128",
+           "165.22.57.60:8888",
+           "1.20.100.93:34926",
+           "182.52.74.76:34084",
+           '-1',
+            "125.26.109.114:61005",
+           "217.12.222.210:53281",
+           "195.182.22.178:49253",
+           "195.69.221.198:38701",
+           '-1',
+            "176.37.50.238:50650",
+           "134.209.21.13:3128",
+           "46.101.16.157:3128",
+           "104.236.54.196:8080",
+           "155.138.234.101:8080"
+           ]
+
+proxiesLibrary = {}
+for proxy in proxiesDatabase:
+    proxiesLibrary[proxy] = 0
 
 def get_random_ua():
     random_ua = ''
@@ -62,6 +157,46 @@ def findFromSoup(soup, tag, attribute, val, index=0, formatted=True):
 
         return v
 
+def proxyPenalty(proxy):
+    if len(proxiesDatabase) <= 25:
+        return
+
+    if proxy not in proxiesDatabase:
+        if proxy not in proxiesLibrary.keys():
+            pass
+        else:
+            proxiesLibrary.pop(proxy)
+        return
+
+    if proxy not in proxiesLibrary.keys():
+        while proxy in proxiesDatabase:
+            proxiesDatabase.pop(proxiesDatabase.index(proxy))
+
+
+    global maxToleranceForProxy
+
+    proxiesLibrary[proxy] += 1
+    if proxiesLibrary[proxy] > maxToleranceForProxy:
+        print(f"Max tolernace reached for {proxy}")
+        proxiesLibrary.pop(proxy)
+        while proxy in proxiesDatabase:
+            proxiesDatabase.pop(proxiesDatabase.index(proxy))
+
+def proxyReward(proxy):
+    if len(proxiesDatabase) <= 25:
+        return
+
+    if proxy not in proxiesLibrary.keys():
+        proxiesLibrary[proxy] = maxToleranceForProxy / 2
+    else:
+        proxiesLibrary[proxy] -= 5
+
+    if proxiesDatabase.count(proxy) > 5:
+        return
+
+    proxiesDatabase.append(proxy)
+
+
 
 def getETF(ETFName, unsearchable, researched, weights, retry=False, proxy=proxiesDatabase[0], queue=0):
     global start
@@ -86,13 +221,13 @@ def getETF(ETFName, unsearchable, researched, weights, retry=False, proxy=proxie
 
         etfdbsoup = BeautifulSoup(etfdbresponse.text, 'html.parser')
         if etfdbresponse.status_code != 200 or etfdbsoup.find("title").getText().find("Page Not Found") != -1:
-            # proxyPenalty(proxy)
+            proxyPenalty(proxy)
             return getETF(ETFName, unsearchable, researched, weights, retry=True, proxy=random.choice(proxiesDatabase), queue=queue)
     except eventlet.timeout.Timeout:
-        # proxyPenalty(proxy)
+        proxyPenalty(proxy)
         return getETF(ETFName, unsearchable, researched, weights, retry=True, proxy=random.choice(proxiesDatabase), queue=queue)
     except:
-        # proxyPenalty(proxy)
+        proxyPenalty(proxy)
         return getETF(ETFName, unsearchable, researched, weights, retry=True, proxy=random.choice(proxiesDatabase), queue=queue)
 
     try:
@@ -197,13 +332,6 @@ def getETF(ETFName, unsearchable, researched, weights, retry=False, proxy=proxie
     return proxy
 
 
-def acquireProxies(b):
-    global proxiesDatabase
-    proxiesDatabase = findProxies()
-
-thread1 = threading.Thread(target=acquireProxies, args=(1,))
-thread1.start()
-
 print("Welcome to investment recommender. Ensure that ETFList.csv and weighting.csv are in the same directory as this program.")
 input("If you've already done so, press ENTER to begin the ranking of those ETFs: ")
 
@@ -227,13 +355,14 @@ for eachIndex in indices:
 # Get Data
 listOfETFs = pd.read_csv("ETFList.csv", index_col="Symbol").index.values
 nOfETFs = len(listOfETFs)
+
 print("Initialization Completed. Downloading Data.")
-start = time.time()
+
 j = 0
 sys.stdout.write("[%-20s] %d%%" % ('='*int(20*j), 100*j))
 
 # Split into 50 partitions
-numberOfPetitions = 30
+numberOfPetitions = 25
 fractionofLen = int(nOfETFs / numberOfPetitions)
 petitions = []
 for i in range(numberOfPetitions):
@@ -243,7 +372,7 @@ def searching(partition, tn):
     global listOfUnsearchableTickers
     global weightingUnprocessed
     global researchedETFs
-    proxy = proxiesDatabase[0]
+    proxy = random.choice(proxiesDatabase)
     for index, item in enumerate(partition):
         proxy = getETF(item, listOfUnsearchableTickers, researchedETFs, weightingUnprocessed, queue=tn, proxy=proxy)
         time.sleep(randint(1, 3))

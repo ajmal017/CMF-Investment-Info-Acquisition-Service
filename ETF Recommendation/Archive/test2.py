@@ -15,6 +15,7 @@ from random import seed
 from random import randint
 from scraps import findProxies
 seed(1)
+maxToleranceForProxy = 20
 
 listOfUnsearchableTickers = []
 researchedETFs = {
